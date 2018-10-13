@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">@color/caribbean</color>
+    <color name="colorPrimaryDark">@color/caribbean_dark</color>
+    <color name="colorAccent">@color/metal</color>
+
+
+    <color name="caribbean">#89A5BB</color><!--metal-->
+    <color name="caribbean_dark">#00C491</color><!--metal-->
+    <color name="metal">#89A5BB</color><!--metal-->
+    <color name="dust">#F0F0F0</color><!--metal-->
+    <color name="text_main">#333333</color><!--metal-->
+    <color name="eggplant">#531E60</color><!--metal-->
+</resources>
