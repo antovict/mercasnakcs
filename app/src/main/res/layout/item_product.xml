@@ -43,6 +43,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:text="@string/price"
+                    android:textStyle="bold"
                     android:id="@+id/item_product_tvPrice"
                     android:layout_height="wrap_content" />
                 <Button

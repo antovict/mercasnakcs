@@ -15,6 +15,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.LinearLayout
 import android.widget.ListView
+import android.widget.Toast
 import com.google.gson.Gson
 import kotlinx.android.synthetic.main.activity_principal.*
 import kotlinx.android.synthetic.main.drawer_menu.*
@@ -71,6 +72,12 @@ class Principal : AppCompatActivity() {
         drawerLayout = findViewById(R.id.drawer_layout) as DrawerLayout
         taskGetProducts(this).execute()
         tvOrderBy.setTag("0")
+        btnFinalizarCarrito.setOnClickListener {view ->
+            productCartList.removeAll(productCartList)
+            Log.i("Listado de Productos", productList.toString())
+            adapterCart.notifyDataSetChanged()
+            Toast.makeText(this, "Su orden de compra fue procesada con exito!", Toast.LENGTH_LONG).show()
+        }
 
         // Click event for single list row
         //(listView as ListView).onItemClickListener = AdapterView.OnItemClickListener { adapterView, view, i, l -> Toast.makeText(applicationContext, movieList?.get(i)?.title, Toast.LENGTH_SHORT).show() }
