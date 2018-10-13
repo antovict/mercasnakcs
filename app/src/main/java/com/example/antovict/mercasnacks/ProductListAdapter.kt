@@ -1,16 +1,19 @@
 package com.example.antovict.mercasnacks
 
 import android.app.Activity
-import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.os.AsyncTask
-import android.support.v7.widget.RecyclerView
+import android.support.v4.content.ContextCompat.getColor
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import java.net.URL
+import java.text.NumberFormat
+import java.util.*
 
 
 /**
@@ -54,15 +57,18 @@ class ProductListAdapter(private val activity: Activity, private var items: Arra
             view = convertView
             viewHolder = view.tag as ViewHolder
         }
-
+        ProductsCache.instance
         var product = items[position]
         viewHolder.tvName?.text = product.name
-        if (product.special_price > 0) {
+
+        if (product.special_price > 0.0) {
             //precio especial
-            viewHolder.tvPrice?.text = product.special_price.toString()
+            viewHolder.tvPrice?.text = getCurrency(product.special_price) + "(Oferta)"
+            viewHolder.tvPrice?.setTextColor(Color.RED)
         } else {
             //precio normal
-            viewHolder.tvPrice?.text = product.price.toString()
+            viewHolder.tvPrice?.text = getCurrency(product.price)
+            viewHolder.tvPrice?.setTextColor(getColor(activity, R.color.eggplant))
         }
         viewHolder.btnAdd?.setOnClickListener(object : View.OnClickListener {
             override fun onClick(v: View?) {
@@ -70,8 +76,13 @@ class ProductListAdapter(private val activity: Activity, private var items: Arra
                     mClickListener?.onBtnClick(product)
             }
         })
-        viewHolder.ivPhoto?.setImageResource(R.mipmap.ic_launcher)  //Reemplazarlo por las imagenes de url
-        DownLoadImageTask(viewHolder.ivPhoto!!).execute(product.image_url)
+        if (product.bitmap == null){
+            DownLoadImageTask(viewHolder.ivPhoto!!, position).execute(product.image_url)
+        }else{
+            viewHolder.ivPhoto?.setImageBitmap(product.bitmap)
+        }
+        //viewHolder.ivPhoto?.setImageResource(R.mipmap.ic_launcher)  //Reemplazarlo por las imagenes de url
+
         return view as View
     }
 
@@ -90,10 +101,17 @@ class ProductListAdapter(private val activity: Activity, private var items: Arra
     override fun getCount(): Int {
         return items.size
     }
+
+    fun getCurrency(value : Double) : String{
+        var format = NumberFormat.getCurrencyInstance(Locale.CANADA)
+        var currency = format.format(value)
+        Log.i("Pesos",currency)
+        return currency
+    }
 }
 
 // Class to download an image from url and display it into an image view
-private class DownLoadImageTask(internal val imageView: ImageView) : AsyncTask<String, Void, Bitmap?>() {
+private class DownLoadImageTask(internal val imageView: ImageView, var pos : Int) : AsyncTask<String, Void, Bitmap?>() {
     override fun doInBackground(vararg urls: String): Bitmap? {
         val urlOfImage = urls[0]
         return try {
@@ -105,7 +123,11 @@ private class DownLoadImageTask(internal val imageView: ImageView) : AsyncTask<S
         }
     }
 
+
     override fun onPostExecute(result: Bitmap?) {
+        var producto= ProductsCache.products.get(pos)
+        producto.bitmap = result
+        ProductsCache.products.set(pos, producto)
         if (result != null) {
             // Display the downloaded image into image view
             imageView.setImageBitmap(result)

@@ -5,11 +5,14 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.AsyncTask
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import java.net.URL
+import java.text.NumberFormat
+import java.util.*
 
 
 /**
@@ -45,18 +48,22 @@ class ProductCartListAdapter(ctx: Context, private var items: ArrayList<ProductG
             view = convertView
             viewHolder = view.tag as ViewHolder
         }
-
+        ProductsCache.instance
         var product = items[position]
         viewHolder.tvName?.text = product.name
         if (product.special_price > 0){
             //precio especial
-            viewHolder.tvPrice?.text = product.special_price.toString()
+            viewHolder.tvPrice?.text = getCurrency(product.special_price)
         }else{
             //precio normal
-            viewHolder.tvPrice?.text = product.price.toString()
+            viewHolder.tvPrice?.text = getCurrency(product.price)
         }
-        viewHolder.ivPhoto?.setImageResource(R.mipmap.ic_launcher)  //Reemplazarlo por las imagenes de url
-        DownLoadImageTaskCart(viewHolder.ivPhoto!!).execute(product.image_url)
+        if (product.bitmap == null){
+            DownLoadImageTaskCart(viewHolder.ivPhoto!!, position).execute(product.image_url)
+        }else{
+            viewHolder.ivPhoto?.setImageBitmap(product.bitmap)
+        }
+
         return view as View
     }
 
@@ -71,9 +78,16 @@ class ProductCartListAdapter(ctx: Context, private var items: ArrayList<ProductG
     override fun getCount(): Int {
         return items.size
     }
+
+    fun getCurrency(value : Double) : String{
+        var format = NumberFormat.getCurrencyInstance(Locale.CANADA)
+        var currency = format.format(value)
+        Log.i("Pesos",currency)
+        return currency
+    }
 }
 // Class to download an image from url and display it into an image view
-private class DownLoadImageTaskCart(internal val imageView: ImageView) : AsyncTask<String, Void, Bitmap?>() {
+private class DownLoadImageTaskCart(internal val imageView: ImageView, var pos : Int) : AsyncTask<String, Void, Bitmap?>() {
     override fun doInBackground(vararg urls: String): Bitmap? {
         val urlOfImage = urls[0]
         return try {
@@ -85,6 +99,10 @@ private class DownLoadImageTaskCart(internal val imageView: ImageView) : AsyncTa
         }
     }
     override fun onPostExecute(result: Bitmap?) {
+
+        var producto= ProductsCache.products.get(pos)
+        producto.bitmap = result
+        ProductsCache.products.set(pos, producto)
         if(result!=null){
             // Display the downloaded image into image view
             imageView.setImageBitmap(result)

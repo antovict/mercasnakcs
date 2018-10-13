@@ -2,13 +2,9 @@ package com.example.antovict.mercasnacks
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.Context
-import android.content.Intent
 import android.graphics.Color
-import android.icu.text.DecimalFormat
 import android.os.AsyncTask
 import android.os.Bundle
-import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v4.widget.SwipeRefreshLayout
@@ -17,8 +13,6 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
-import android.widget.AdapterView
 import android.widget.LinearLayout
 import android.widget.ListView
 import com.google.gson.Gson
@@ -26,13 +20,14 @@ import kotlinx.android.synthetic.main.activity_principal.*
 import kotlinx.android.synthetic.main.drawer_menu.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
 import java.io.IOException
-import java.math.RoundingMode
+import java.text.NumberFormat
+import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 
 
- class Principal : AppCompatActivity() {
+class Principal : AppCompatActivity() {
     internal lateinit var listView: ListView
     internal lateinit var listViewCart: ListView
     internal lateinit var productList : ArrayList<ProductGeneric>
@@ -59,11 +54,10 @@ import java.util.concurrent.TimeUnit
         refresh.setOnRefreshListener {
             // Initialize a new Runnable
             run {
+                tvOrderBy.setTag("0")
                 taskGetProducts(this).execute()
             }
         }
-        ProductsCache.instance
-        ProductsCache.products
         drawerLayout.setScrimColor(Color.TRANSPARENT)
         actionBarDrawerToggle = object : ActionBarDrawerToggle(this, drawerLayout, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
             /*override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
@@ -77,17 +71,6 @@ import java.util.concurrent.TimeUnit
         drawerLayout = findViewById(R.id.drawer_layout) as DrawerLayout
         taskGetProducts(this).execute()
         tvOrderBy.setTag("0")
-        tvOrderBy.setOnClickListener {view ->
-            if (tvOrderBy.tag.equals("0")){
-                tvOrderBy.setTag("1")
-                productList.sortedWith(compareBy<ProductGeneric>({ it.price }).reversed())
-            }else{
-                tvOrderBy.setTag("0")
-                productList.sortedWith(compareBy{ it.price })
-            }
-            adapterCart.notifyDataSetChanged()
-        }
-        //prepareMovieData()
 
         // Click event for single list row
         //(listView as ListView).onItemClickListener = AdapterView.OnItemClickListener { adapterView, view, i, l -> Toast.makeText(applicationContext, movieList?.get(i)?.title, Toast.LENGTH_SHORT).show() }
@@ -124,7 +107,7 @@ import java.util.concurrent.TimeUnit
         }
     }
 
-    public fun addAlCarrito(producto : ProductGeneric){
+    fun addAlCarrito(producto : ProductGeneric){
         productCartList.add(producto)
         adapterCart = ProductCartListAdapter(this, productCartList)
 
@@ -150,9 +133,14 @@ import java.util.concurrent.TimeUnit
                     .writeTimeout(60, TimeUnit.SECONDS)
                     .readTimeout(60, TimeUnit.SECONDS)
                     .build()
-
-            val response = client.newCall(request).execute()
-            return response.body()!!.string()
+            var response = ""
+            try{
+                val response = client.newCall(request).execute()
+                return response.body()!!.string()
+            }catch (e: Exception){
+                e.printStackTrace()
+            }
+            return response
         }
 
         override fun onPreExecute() {
@@ -165,6 +153,8 @@ import java.util.concurrent.TimeUnit
 
             var objetos = Gson().fromJson(result, JSONObjectProducts::class.java)
             productList = objetos.retailer.products
+            ProductsCache.products = productList
+            adapterCart = ProductCartListAdapter(activity.applicationContext, ArrayList())
             adapter = ProductListAdapter(activity, productList, object : ProductListAdapter.BtnClickListener {
                 override fun onBtnClick(product1: ProductGeneric) {
                     addAlCarrito(product1)
@@ -178,13 +168,35 @@ import java.util.concurrent.TimeUnit
                         }
                         item.price
                     }
-                    tvTotalCarrito.text = total.toString()
+                    tvTotalCarrito.text =getCurrency(total)
                 }
             })
+            tvOrderBy.setOnClickListener {view ->
+                if (tvOrderBy.tag.equals("0")){
+                    tvOrderBy.setTag("1")
+                    Collections.sort(productList)
+                    ivOrderBy.setImageResource(R.drawable.ic_arrow_down)
+                    //productList.sortedWith(compareByDescending({ it.price }))
+                }else{
+                    tvOrderBy.setTag("0")
+                    Collections.reverse(productList)
+                    ivOrderBy.setImageResource(R.drawable.ic_arrow_up)
+                    //productList.sortedWith(compareBy({ it.price }))
+                }
+                Log.i("Listado de Productos", productList.toString())
+                adapter.notifyDataSetChanged()
+            }
+            //prepareMovieData()
             (listView as ListView).adapter = adapter
             adapter?.notifyDataSetChanged()
             Log.i("Adapter", adapter?.count.toString())
             refresh.isRefreshing = false
+        }
+        fun getCurrency(value : Double) : String{
+            var format = NumberFormat.getCurrencyInstance(Locale.CANADA)  // usa la misma nomenclatura de colombia
+            var currency = format.format(value)
+            Log.i("Pesos",currency)
+            return currency
         }
     }
 }

@@ -1,5 +1,7 @@
 package com.example.antovict.mercasnacks
 
+import android.graphics.Bitmap
+
 data class Url(var version:String, var active : Boolean, var url : String)
 data class Urls(var urls : ArrayList<Url>)
 data class Unit(var name:String, var abbreviation:String, var _id : Int)
