@@ -62,6 +62,8 @@ import java.util.concurrent.TimeUnit
                 taskGetProducts(this).execute()
             }
         }
+        ProductsCache.instance
+        ProductsCache.products
         drawerLayout.setScrimColor(Color.TRANSPARENT)
         actionBarDrawerToggle = object : ActionBarDrawerToggle(this, drawerLayout, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
             /*override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
