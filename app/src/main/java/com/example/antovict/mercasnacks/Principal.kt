@@ -73,10 +73,14 @@ class Principal : AppCompatActivity() {
         taskGetProducts(this).execute()
         tvOrderBy.setTag("0")
         btnFinalizarCarrito.setOnClickListener {view ->
-            productCartList.removeAll(productCartList)
-            Log.i("Listado de Productos", productList.toString())
-            adapterCart.notifyDataSetChanged()
-            Toast.makeText(this, "Su orden de compra fue procesada con exito!", Toast.LENGTH_LONG).show()
+            if (productCartList.size > 0){
+                productCartList.removeAll(productCartList)
+                Log.i("Listado de Productos", productList.toString())
+                adapterCart.notifyDataSetChanged()
+                Toast.makeText(this, "Su orden de compra fue procesada con exito!", Toast.LENGTH_LONG).show()
+            }else{
+                Toast.makeText(this, "Su carrito esta Vacio!", Toast.LENGTH_LONG).show()
+            }
         }
 
         // Click event for single list row
